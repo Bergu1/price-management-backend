@@ -1,0 +1,7 @@
+Django
+djangorestframework
+psycopg2
+drf-spectacular
+django-cors-headers
+requests
+Pillow
