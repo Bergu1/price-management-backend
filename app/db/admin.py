@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User
+from .models import User, Product
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -18,3 +18,27 @@ class UserAdmin(BaseUserAdmin):
     )
     search_fields = ('email', 'username')
     ordering = ('email',)
+
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ('name', 'country_of_origin', 'distance', 'price1')
+    search_fields = ('name', 'country_of_origin')
+    list_filter = ('country_of_origin',)
+    readonly_fields = ('id',)
+    ordering = ('name',)
+
+    fieldsets = (
+        (None, {
+            'fields': (
+                'name',
+                'description',
+                'picture',
+                'country_of_origin',
+                'distance',
+                'price1',
+                'price2',
+                'price3',
+            )
+        }),
+    )
