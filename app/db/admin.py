@@ -22,7 +22,7 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'country_of_origin', 'distance', 'price1')
+    list_display = ('name', 'country_of_origin', 'distance', 'price1', 'price2', 'price3')
     search_fields = ('name', 'country_of_origin')
     list_filter = ('country_of_origin',)
     readonly_fields = ('id',)
