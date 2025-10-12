@@ -59,3 +59,4 @@ class ProductSerializer(serializers.ModelSerializer):
 
         # reszta pól jak zwykle
         return super().update(instance, validated_data)
+

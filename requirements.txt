@@ -5,3 +5,4 @@ drf-spectacular
 django-cors-headers
 requests
 Pillow
+paho-mqtt>=1.6

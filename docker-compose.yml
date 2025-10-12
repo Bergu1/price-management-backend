@@ -3,8 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        - DEV=true
+      args: [DEV=true]
     ports:
       - "8000:8000"
     volumes:
@@ -13,14 +12,20 @@ services:
     command: >
       sh -c "python manage.py wait_for_db &&
              python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+             python manage.py runserver --noreload 0.0.0.0:8000"
     environment:
       - DB_HOST=db
       - DB_NAME=shopdb
       - DB_USER=devkonrad
       - DB_PASS=konradpass
+      - MQTT_HOST=mqtt
+      - MQTT_PORT=1883
+      - MQTT_USER=backend
+      - MQTT_PASS=backendpass
     depends_on:
       - db
+      - mqtt
+    restart: unless-stopped
 
   db:
     image: postgres:13-alpine
@@ -30,6 +35,17 @@ services:
       - POSTGRES_DB=shopdb
       - POSTGRES_USER=devkonrad
       - POSTGRES_PASSWORD=konradpass
+    restart: unless-stopped
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
 
 volumes:
   dev-db-data:

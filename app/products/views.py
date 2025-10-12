@@ -54,3 +54,34 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         product.save()
         return Response(self.get_serializer(product).data, status=200)
+
+
+    def perform_update(self, serializer):
+        # 1) zapisz produkt (rotacja cen robi się w serializer.update)
+        product = serializer.save()
+
+        # 2) weź numer półki z requestu: najpierw query ?shelf=, potem body {"shelf": }
+        shelf_raw = self.request.query_params.get("shelf", None)
+        if shelf_raw is None:
+            shelf_raw = self.request.data.get("shelf", None)
+
+        try:
+            shelf = int(shelf_raw) if shelf_raw is not None else None
+        except (TypeError, ValueError):
+            shelf = None
+
+        # 3) jeśli jest poprawny numer półki, wyślij komendę MQTT
+        if shelf in (1, 2, 3):
+            try:
+                from app import mqtt_client
+                ack = mqtt_client.publish_product_to_shelf(
+                    product, shelf=shelf, retain=False, timeout=10.0
+                )
+                print("[MQTT] publish ack:", ack)
+            except Exception as e:
+                # Nie blokuj zapisu przy błędzie MQTT
+                print("[MQTT] error in perform_update:", e)
+        else:
+            # brak / zły numer półki -> nie publikujemy
+            print("[MQTT] skip publish (no valid 'shelf' provided)")
+
