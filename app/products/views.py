@@ -1,5 +1,5 @@
 # app/products/views.py
-from rest_framework import generics, viewsets, authentication, filters, parsers, status
+from rest_framework import generics, viewsets, authentication, filters, parsers, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from db.models import Product
@@ -10,6 +10,8 @@ from .permissions import IsEmployee
 class ProductListView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []  # <- ważne, żeby globalny TokenAuth nie łapał
 
 # Panel pracownika – WSZYSTKO zablokowane dla nie-pracowników
 class ProductViewSet(viewsets.ModelViewSet):
