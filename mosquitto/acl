@@ -2,8 +2,10 @@ user backend
 topic write store/shelf/+/display/cmd
 topic read  store/shelf/+/display/ack
 topic read  store/shelf/+/status
+topic read  store/device/+/telemetry
 
 user esp32
 topic read  store/shelf/+/display/cmd
 topic write store/shelf/+/display/ack
 topic write store/shelf/+/status
+topic write store/device/+/telemetry

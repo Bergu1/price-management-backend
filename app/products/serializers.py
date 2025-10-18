@@ -1,34 +1,49 @@
 # app/products/serializers.py
-from rest_framework import serializers
 from decimal import Decimal, InvalidOperation
-from db.models import Product
+from rest_framework import serializers
+from db.models import Product, ShelfState
+
 
 class ProductSerializer(serializers.ModelSerializer):
     availability = serializers.SerializerMethodField(read_only=True)
 
+    # TELEMETRIA (annotate w queryset – patrz views.py)
+    d1_mm = serializers.SerializerMethodField(read_only=True)
+    d2_mm = serializers.SerializerMethodField(read_only=True)
+    weight_g = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Product
         fields = [
-            "id",
-            "name",
-            "description",
-            "picture",
-            "country_of_origin",
+            "id", "name", "description", "picture", "country_of_origin",
             "availability",
-            "price1",   # aktualna
-            "price2",   # poprzednia
-            "price3",   # przed-poprzednia
-            "is_active",
-            "added_data",
+            "d1_mm", "d2_mm", "weight_g",
+            "price1", "price2", "price3", "is_active", "added_data",
+            "shelf_number",
         ]
-        read_only_fields = ["id", "added_data", "availability", "price2", "price3"]
+        read_only_fields = [
+            "id", "added_data", "availability", "price2", "price3",
+            "d1_mm", "d2_mm", "weight_g",
+        ]
 
+    # --- availability / telemetria ---
     def get_availability(self, obj):
-        for attr in ("availability", "stock", "distance"):
-            if hasattr(obj, attr):
-                return getattr(obj, attr)
+        """
+        Pola telemetryczne są adnotowane w queryset.
+        Tutaj zwracamy None, bo frontend sam liczy dostępność z d1/d2/weight_g.
+        """
         return None
 
+    def get_d1_mm(self, obj):
+        return getattr(obj, "d1_mm", None)
+
+    def get_d2_mm(self, obj):
+        return getattr(obj, "d2_mm", None)
+
+    def get_weight_g(self, obj):
+        return getattr(obj, "weight_g", None)
+
+    # --- logika cen ---
     def _to_decimal(self, v):
         try:
             return Decimal(str(v))
@@ -36,27 +51,26 @@ class ProductSerializer(serializers.ModelSerializer):
             return None
 
     def update(self, instance, validated_data):
-        """
-        Jeżeli przychodzi nowa price1 i różni się od bieżącej:
-        price3 <- price2, price2 <- stare price1, price1 <- nowe.
-        price2/price3 z requestu są ignorowane (read-only).
-        """
-        # Zabezpieczenie: nie pozwalaj nadpisywać price2/price3 z zewnątrz
+        # price2/price3 nie nadpisujemy wprost z requestu
         validated_data.pop("price2", None)
         validated_data.pop("price3", None)
 
+        # jeśli price1 się zmienia → przesuń historię cen
         if "price1" in validated_data:
             new_p = self._to_decimal(validated_data.get("price1"))
             old_p = self._to_decimal(instance.price1)
-
             if new_p is not None and old_p is not None and new_p != old_p:
-                # rotacja historii cen
                 instance.price3 = instance.price2
                 instance.price2 = instance.price1
                 instance.price1 = new_p
-                # usuwamy z validated_data, żeby super().update nie nadpisał
                 validated_data.pop("price1", None)
 
-        # reszta pól jak zwykle
         return super().update(instance, validated_data)
 
+
+# ====== serializer telemetrii ======
+class ShelfStateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShelfState
+        fields = ["shelf", "d1_mm", "d2_mm", "weight_g", "updated_at"]
+        read_only_fields = ["updated_at"]
