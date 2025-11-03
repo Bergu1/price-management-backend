@@ -79,8 +79,6 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         product = serializer.save()
-
-        # Półka może przyjść w query (?shelf=) albo w body (shelf)
         shelf_raw = self.request.query_params.get("shelf")
         if shelf_raw is None:
             shelf_raw = self.request.data.get("shelf")
@@ -138,7 +136,7 @@ class TelemetryViewSet(mixins.CreateModelMixin,
     """
     queryset = ShelfState.objects.all()
     serializer_class = ShelfStateSerializer
-    permission_classes = [permissions.AllowAny]  # dodaj auth jeśli potrzebujesz
+    permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
     def create(self, request, *args, **kwargs):
@@ -147,15 +145,13 @@ class TelemetryViewSet(mixins.CreateModelMixin,
             return Response({"detail": "Field 'shelf' is required"}, status=400)
         shelf = int(shelf)
 
-        # Parsujemy wartości (mogą być z jednostkami np. "530 mm", "1.6 kg")
         d1 = _num(request.data.get("d1_mm") or request.data.get("d1"))
         d2 = _num(request.data.get("d2_mm") or request.data.get("d2"))
         wg = _num(request.data.get("weight_g"))
         if wg is None and request.data.get("weight_kg") is not None:
             wk = _num(request.data.get("weight_kg"))
             wg = wk * 1000.0 if wk is not None else None
-
-        # Ustawiamy tylko właściwe pole dla danej półki (nie nadpisujemy innych na None).
+            
         defaults = {}
         if shelf == 1 and d1 is not None:
             defaults["d1_mm"] = d1

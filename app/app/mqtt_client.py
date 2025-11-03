@@ -26,7 +26,6 @@ def _num(v):
     return float(m.group(0)) if m else None
 
 def _shelf_from_topic(topic: str):
-    # oczekiwany: store/shelf/<NUM>/telemetry
     parts = topic.split("/")
     try:
         i = parts.index("shelf")
@@ -63,7 +62,6 @@ def _save_single_shelf(data: dict, shelf: int):
         ShelfState.objects.update_or_create(shelf=shelf, defaults=defaults)
 
 def _save_batch_3_shelves(data: dict):
-    """Brak 'shelf' – traktujemy payload jako pomiar z całej stacji: d1->shelf1, d2->shelf2, weight->shelf3."""
     from django.db import transaction, close_old_connections
     from db.models import ShelfState
 
@@ -92,10 +90,7 @@ def _save_batch_3_shelves(data: dict):
             ShelfState.objects.update_or_create(shelf=shelf, defaults=defaults)
 
 def _save_telemetry(topic: str, data: dict):
-    # 1) spróbuj z tematu
     shelf = _shelf_from_topic(topic)
-
-    # 2) jeśli brak – z payloadu
     if shelf is None:
         s = data.get("shelf")
         try:
@@ -106,7 +101,6 @@ def _save_telemetry(topic: str, data: dict):
     if shelf in (1, 2, 3):
         _save_single_shelf(data, shelf)
     else:
-        # 3) brak jednoznacznej półki → traktuj jako pomiar 3-półkowy i rozbij
         _save_batch_3_shelves(data)
 
 def _on_connect(client, userdata, flags, reason_code, properties=None):

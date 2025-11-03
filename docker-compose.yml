@@ -1,3 +1,4 @@
+name: price-management
 services:
   app:
     build:
@@ -45,6 +46,24 @@ services:
       - ./mosquitto:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
+
+  # --- Frontend (Vite/React) - DEV z hot reloadem ---
+  frontend:
+    build:
+      context: ../price-management-frontend   # katalog frontendu (obok backendu)
+      target: dev
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - VITE_HMR_CLIENT_PORT=5173
+    volumes:
+      - ../price-management-frontend:/app     # ten sam katalog co w 'context'
+      - /app/node_modules
+    depends_on:
+      - app
     restart: unless-stopped
 
 volumes:

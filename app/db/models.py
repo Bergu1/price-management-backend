@@ -90,11 +90,7 @@ class ShoppingListItem(models.Model):
 
 
 class ShelfState(models.Model):
-    """
-    Jeden rekord na półkę (unikalny), zawsze przechowuje ostatnie wartości.
-    Aktualizujesz to przy przyjściu danych z ESP.
-    """
-    shelf = models.PositiveSmallIntegerField(unique=True)  # 1..3
+    shelf = models.PositiveSmallIntegerField(unique=True)
     d1_mm = models.FloatField(null=True, blank=True)
     d2_mm = models.FloatField(null=True, blank=True)
     weight_g = models.FloatField(null=True, blank=True)

@@ -6,8 +6,6 @@ from db.models import Product, ShelfState
 
 class ProductSerializer(serializers.ModelSerializer):
     availability = serializers.SerializerMethodField(read_only=True)
-
-    # TELEMETRIA (annotate w queryset – patrz views.py)
     d1_mm = serializers.SerializerMethodField(read_only=True)
     d2_mm = serializers.SerializerMethodField(read_only=True)
     weight_g = serializers.SerializerMethodField(read_only=True)
@@ -26,7 +24,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "d1_mm", "d2_mm", "weight_g",
         ]
 
-    # --- availability / telemetria ---
     def get_availability(self, obj):
         """
         Pola telemetryczne są adnotowane w queryset.
@@ -51,11 +48,9 @@ class ProductSerializer(serializers.ModelSerializer):
             return None
 
     def update(self, instance, validated_data):
-        # price2/price3 nie nadpisujemy wprost z requestu
         validated_data.pop("price2", None)
         validated_data.pop("price3", None)
 
-        # jeśli price1 się zmienia → przesuń historię cen
         if "price1" in validated_data:
             new_p = self._to_decimal(validated_data.get("price1"))
             old_p = self._to_decimal(instance.price1)
@@ -67,8 +62,6 @@ class ProductSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
-
-# ====== serializer telemetrii ======
 class ShelfStateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShelfState

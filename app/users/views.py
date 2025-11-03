@@ -9,13 +9,13 @@ from rest_framework.response import Response
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []  # <- brak wymogu tokena
+    authentication_classes = []
 
 class CreateTokenView(ObtainAuthToken):
     serializer_class = AuthTokenSerializer
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
     permission_classes = [permissions.AllowAny]
-    authentication_classes = []  # <- brak wymogu tokena
+    authentication_classes = []
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
